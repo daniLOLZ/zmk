@@ -49,6 +49,7 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_BREATHE,
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
+    UNDERGLOW_EFFECT_WAVE,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
@@ -130,6 +131,15 @@ static struct led_rgb hsb_to_rgb(struct zmk_led_hsb hsb) {
     return rgb;
 }
 
+static bool find_in_list(int element, int* list, size_t arr_size){
+    for (size_t i = 0; i < arr_size; i++){
+        if(element == list[i]){
+            return true;
+        }
+    }
+    return false;
+}
+
 static void zmk_rgb_underglow_effect_solid() {
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
@@ -175,6 +185,54 @@ static void zmk_rgb_underglow_effect_swirl() {
     state.animation_step = state.animation_step % HUE_MAX;
 }
 
+static void zmk_rgb_underglow_effect_wave() {
+    // hardcoded for splitkb aurora corne    
+    int GROUP_0[6] = {3,4,5,6,7,8};
+    int GROUP_1[6] = {9,10,11,12,13,26};
+    int GROUP_2[7] = {14,15,16,17,18,25,0};
+    int GROUP_3[8] = {19,20,21,22,23,24,1,2};
+
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        struct zmk_led_hsb hsb = state.color;
+        int group = -1;
+        
+        if (find_in_list(i, GROUP_0, 6)) group = 0;
+        if (find_in_list(i, GROUP_1, 6)) group = 1;
+        if (find_in_list(i, GROUP_2, 7)) group = 2;
+        if (find_in_list(i, GROUP_3, 8)) group = 3;
+        // 2400 steps
+
+        int shift = 100; // default
+
+        switch (group) {
+        case 0:
+            shift = 150;
+            break;
+        case 1:
+            shift = 100;
+            break;
+        case 2:
+            shift = 75;
+            break;
+        case 3:
+            shift = 40;
+            break;
+        default:
+            shift = 100;
+            break;
+        };
+
+        hsb.b = CLAMP((-abs(state.animation_step - 1200) / 12) + shift, 0, BRT_MAX);
+        pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
+    }
+
+    state.animation_step += state.animation_speed * 10;
+
+    if (state.animation_step > 2400) {
+        state.animation_step = 0;
+    }
+}
+
 static void zmk_rgb_underglow_tick(struct k_work *work) {
     switch (state.current_effect) {
     case UNDERGLOW_EFFECT_SOLID:
@@ -188,6 +246,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         break;
     case UNDERGLOW_EFFECT_SWIRL:
         zmk_rgb_underglow_effect_swirl();
+        break;
+    case UNDERGLOW_EFFECT_WAVE:
+        zmk_rgb_underglow_effect_wave();
         break;
     }
 
