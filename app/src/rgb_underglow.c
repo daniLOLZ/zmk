@@ -187,7 +187,7 @@ static void zmk_rgb_underglow_effect_swirl() {
 
 static void zmk_rgb_underglow_effect_wave() {
     // hardcoded for splitkb aurora corne    
-    int GROUP_0[6] = {3,4,5,6,7,8};
+    int GROUP_0[6] = {3,4,5,6,7,8}; 
     int GROUP_1[6] = {9,10,11,12,13,26};
     int GROUP_2[7] = {14,15,16,17,18,25,0};
     int GROUP_3[8] = {19,20,21,22,23,24,1,2};
