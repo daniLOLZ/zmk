@@ -206,16 +206,16 @@ static void zmk_rgb_underglow_effect_wave() {
 
         switch (group) {
         case 0:
-            shift = 150;
+            shift = 120;
             break;
         case 1:
-            shift = 100;
+            shift = 70;
             break;
         case 2:
-            shift = 75;
+            shift = 45;
             break;
         case 3:
-            shift = 40;
+            shift = 20;
             break;
         default:
             shift = 100;
