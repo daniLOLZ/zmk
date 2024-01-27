@@ -162,7 +162,7 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
 
         char label[2];
         snprintf(label, sizeof(label), "%d", i + 1);
-        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 5, circle_offsets[i][1] - 9, 4, // i'm assuming this is the font size
+        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 4, circle_offsets[i][1] - 10, 8, // i'm assuming this is the font size
                             (selected ? &label_dsc_black : &label_dsc), label);
     }
 
@@ -324,7 +324,7 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     
     lv_obj_t *art = lv_img_create(widget->obj);
     lv_img_set_src(art, &tails);
-    lv_obj_align(art, LV_ALIGN_CENTER, -40, 0);
+    lv_obj_align(art, LV_ALIGN_CENTER, -36, 0);
 
     sys_slist_append(&widgets, &widget->node);
     widget_battery_status_init();
