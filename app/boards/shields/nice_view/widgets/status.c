@@ -143,14 +143,14 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
 
     // Draw circles
     int circle_offsets[3][2] = {
-        {9, 9}, {34, 9}, {59,9}
+        {10, 10}, {34, 10}, {58, 10}
     };
     // nice!view is 160x68
     // The measurements above are relative to the square allotted to the profile circles
     for (int i = 0; i < 5; i++) {
         bool selected = i == state->active_profile_index;
 
-        lv_canvas_draw_arc(canvas, circle_offsets[i][0], circle_offsets[i][1], 9, 0, 359,
+        lv_canvas_draw_arc(canvas, circle_offsets[i][0], circle_offsets[i][1], 10, 0, 359,
                            &arc_dsc);
 
         if (selected) {
@@ -160,7 +160,7 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
 
         char label[2];
         snprintf(label, sizeof(label), "%d", i + 1);
-        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 5, circle_offsets[i][1] - 7, 12, // i'm assuming this is the font size
+        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 4, circle_offsets[i][1] - 6, 10, // i'm assuming this is the font size
                             (selected ? &label_dsc_black : &label_dsc), label);
     }
 
