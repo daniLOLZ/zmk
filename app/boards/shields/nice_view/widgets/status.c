@@ -162,7 +162,7 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
 
         char label[2];
         snprintf(label, sizeof(label), "%d", i + 1);
-        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 6, circle_offsets[i][1] - 9, 10, // i'm assuming this is the font size
+        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 5, circle_offsets[i][1] - 9, 8, // i'm assuming this is the font size
                             (selected ? &label_dsc_black : &label_dsc), label);
     }
 
