@@ -142,26 +142,29 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
     // Draw circles
-    int circle_offsets[5][2] = {
-        {13, 13}, {55, 13}, {34, 34}, {13, 55}, {55, 55},
+    int circle_offsets[3][2] = {
+        {9, 9}, {34, 9}, {59,9}
     };
-
+    // nice!view is 160x68
+    // The measurements above are relative to the square allotted to the profile circles
     for (int i = 0; i < 5; i++) {
         bool selected = i == state->active_profile_index;
 
-        lv_canvas_draw_arc(canvas, circle_offsets[i][0], circle_offsets[i][1], 13, 0, 359,
+        lv_canvas_draw_arc(canvas, circle_offsets[i][0], circle_offsets[i][1], 9, 0, 359,
                            &arc_dsc);
 
         if (selected) {
-            lv_canvas_draw_arc(canvas, circle_offsets[i][0], circle_offsets[i][1], 9, 0, 359,
+            lv_canvas_draw_arc(canvas, circle_offsets[i][0], circle_offsets[i][1], 6, 0, 359,
                                &arc_dsc_filled);
         }
 
         char label[2];
         snprintf(label, sizeof(label), "%d", i + 1);
-        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 8, circle_offsets[i][1] - 10, 16,
+        lv_canvas_draw_text(canvas, circle_offsets[i][0] - 5, circle_offsets[i][1] - 7, 12, // i'm assuming this is the font size
                             (selected ? &label_dsc_black : &label_dsc), label);
     }
+
+    // HERE DRAW THE LOGO
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
@@ -308,15 +311,15 @@ ZMK_SUBSCRIPTION(widget_wpm_status, zmk_wpm_state_changed);
 
 int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
-    lv_obj_set_size(widget->obj, 160, 68);
+    lv_obj_set_size(widget->obj, 160, 68); //will be rotated ccw, so height x width
     lv_obj_t *top = lv_canvas_create(widget->obj);
-    lv_obj_align(top, LV_ALIGN_TOP_RIGHT, 0, 0);
+    lv_obj_align(top, LV_ALIGN_TOP_RIGHT, 0, 0); // will be on the top
     lv_canvas_set_buffer(top, widget->cbuf, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
     lv_obj_t *middle = lv_canvas_create(widget->obj);
-    lv_obj_align(middle, LV_ALIGN_TOP_LEFT, 24, 0);
+    lv_obj_align(middle, LV_ALIGN_TOP_LEFT, 24, 0); // will be aligned on the bottom and then shifted up
     lv_canvas_set_buffer(middle, widget->cbuf2, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
     lv_obj_t *bottom = lv_canvas_create(widget->obj);
-    lv_obj_align(bottom, LV_ALIGN_TOP_LEFT, -44, 0);
+    lv_obj_align(bottom, LV_ALIGN_TOP_LEFT, -44, 0); // will be aligned on the bottom and then shifted down, losing most of the canvas outside the margins
     lv_canvas_set_buffer(bottom, widget->cbuf3, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
 
     sys_slist_append(&widgets, &widget->node);
