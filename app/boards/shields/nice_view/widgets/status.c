@@ -27,6 +27,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/wpm.h>
 
 LV_IMG_DECLARE(tails);
+LV_IMG_DECLARE(mountain);
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -322,9 +323,9 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     lv_obj_align(bottom, LV_ALIGN_TOP_LEFT, -44, 0); // will be aligned on the bottom and then shifted down, losing most of the canvas outside the margins
     lv_canvas_set_buffer(bottom, widget->cbuf3, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
     
-    // lv_obj_t *art = lv_img_create(widget->obj);
-    // lv_img_set_src(art, &tails);
-    // lv_obj_align(art, LV_ALIGN_CENTER, -50, 0);
+    lv_obj_t *art = lv_img_create(widget->obj);
+    lv_img_set_src(art, &mountain);
+    lv_obj_align(art, LV_ALIGN_CENTER, -50, 0);
 
     sys_slist_append(&widgets, &widget->node);
     widget_battery_status_init();
