@@ -60,6 +60,7 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_BREATHE,
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
+    UNDERGLOW_EFFECT_WAVE,
     UNDERGLOW_EFFECT_RESPONSIVE,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
