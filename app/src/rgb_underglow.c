@@ -238,8 +238,8 @@ static void zmk_rgb_underglow_effect_wave() {
 
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh);
 
-ZMK_LISTENER(rgb_underglow, rgb_underglow_position_state_changed_listener);
-ZMK_SUBSCRIPTION(rgb_underglow, zmk_position_state_changed);
+ZMK_LISTENER(rgb_underglow_dynamic, rgb_underglow_position_state_changed_listener);
+ZMK_SUBSCRIPTION(rgb_underglow_dynamic, zmk_position_state_changed);
 
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) {
     
