@@ -480,9 +480,10 @@ int zmk_rgb_underglow_calc_effect(int direction) {
 }
 
 int zmk_rgb_underglow_initialize_effect() {
-    if (state.effect != UNDERGLOW_EFFECT_RESPONSIVE){
+    if (state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE){
         return 0;
     }
+    
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
     }
