@@ -26,6 +26,8 @@
 #include <zmk/events/usb_conn_state_changed.h>
 #include <zmk/workqueue.h>
 
+#include <zmk/events/position_state_changed.h>
+
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #if !DT_HAS_CHOSEN(zmk_underglow)
@@ -50,6 +52,7 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
     UNDERGLOW_EFFECT_WAVE,
+    UNDERGLOW_EFFECT_RESPONSIVE,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
@@ -233,6 +236,43 @@ static void zmk_rgb_underglow_effect_wave() {
     }
 }
 
+static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh);
+
+ZMK_LISTENER(rgb_underglow, rgb_underglow_position_state_changed_listener);
+ZMK_SUBSCRIPTION(rgb_underglow, zmk_position_state_changed);
+
+static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) {
+    
+    if(state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE){
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+    struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
+    if(ev == NULL){ 
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    struct zmk_led_hsb other_color = state.color; // shifted by half the hue space
+    other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX;
+    uint32_t position_to_use;
+
+    if (ev->position < 0 || ev->position > STRIP_NUM_PIXELS){
+        position_to_use = 0; // DEBUG cuz i don't know what range 'position' has
+    } else {
+        position_to_use = ev->position;
+    }
+
+    if(ev->state){ //on 
+        pixels[position_to_use] = hsb_to_rgb(hsb_scale_min_max(state.color));
+    } else { // off
+        pixels[position_to_use] = hsb_to_rgb(hsb_scale_min_max(other_color));
+    }
+    return ZMK_EV_EVENT_BUBBLE;
+}
+
+static void zmk_rgb_underglow_effect_responsive() {
+    return; // dummy function
+}
+
 static void zmk_rgb_underglow_tick(struct k_work *work) {
     switch (state.current_effect) {
     case UNDERGLOW_EFFECT_SOLID:
@@ -249,6 +289,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         break;
     case UNDERGLOW_EFFECT_WAVE:
         zmk_rgb_underglow_effect_wave();
+        break;
+    case UNDERGLOW_EFFECT_RESPONSIVE:
+        zmk_rgb_underglow_effect_responsive();
         break;
     }
 
