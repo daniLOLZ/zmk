@@ -43,6 +43,15 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define SAT_MAX 100
 #define BRT_MAX 100
 
+#define NUM_KEYS 42
+
+#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+    static const int led_map[NUM_KEYS] = {24, 23, 22, 21, 20, 19, -1, -1, -1, -1, -1, -1, 25, 18, 17, 16, 15, 14, -1, -1, -1, -1, -1, -1, 26, 13, 12, 11, 10, 9, -1, -1, -1, -1, -1, -1, 8, 7, 6, -1, -1, -1};
+#else
+    static const int led_map[NUM_KEYS] = {-1, -1, -1, -1, -1, -1, 19, 20, 21, 22, 23, 24, -1, -1, -1, -1, -1, -1, 14, 15, 16, 17, 18, 25, -1, -1, -1, -1, -1, -1, 9, 10, 11, 12, 13, 26, -1, -1, -1, 6, 7, 8};
+#endif
+
+
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
              "ERROR: RGB underglow maximum brightness is less than minimum brightness");
 
@@ -51,7 +60,6 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_BREATHE,
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
-    UNDERGLOW_EFFECT_WAVE,
     UNDERGLOW_EFFECT_RESPONSIVE,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
@@ -242,7 +250,7 @@ ZMK_LISTENER(rgb_underglow_dynamic, rgb_underglow_position_state_changed_listene
 ZMK_SUBSCRIPTION(rgb_underglow_dynamic, zmk_position_state_changed);
 
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) {
-    
+
     if(state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE){
         return ZMK_EV_EVENT_BUBBLE;
     }
@@ -252,19 +260,24 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
     }
 
     struct zmk_led_hsb other_color = state.color; // shifted by half the hue space
-    other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX;
-    uint32_t position_to_use;
+    // other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX;
+    other_color.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN;
+    int pixel_to_light = 0;
 
-    if (ev->position < 0 || ev->position > STRIP_NUM_PIXELS){
-        position_to_use = 0; // DEBUG cuz i don't know what range 'position' has
+    if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
+        pixel_to_light = 0; // DEBUG in case it fails
     } else {
-        position_to_use = ev->position;
+        pixel_to_light = led_map[ev->position];
+    }
+
+    if(pixel_to_light == -1){ // not on the half that should light up
+        return ZMK_EV_EVENT_BUBBLE;
     }
 
     if(ev->state){ //on 
-        pixels[position_to_use] = hsb_to_rgb(hsb_scale_min_max(state.color));
+        pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
     } else { // off
-        pixels[position_to_use] = hsb_to_rgb(hsb_scale_min_max(other_color));
+        pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(other_color));
     }
     return ZMK_EV_EVENT_BUBBLE;
 }
