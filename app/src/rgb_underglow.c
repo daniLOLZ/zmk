@@ -260,9 +260,9 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    struct zmk_led_hsb other_color = state.color; // shifted by half the hue space
-    // other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX;
-    other_color.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN;
+    struct zmk_led_hsb other_color = state.color; 
+    other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX; // shifted by half the hue space
+    // other_color.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN;
     int pixel_to_light = 0;
 
     if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
@@ -276,15 +276,18 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
     }
 
     if(ev->state){ //on 
-        pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
-    } else { // off
         pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(other_color));
+    } else { // off
+        pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
     }
     return ZMK_EV_EVENT_BUBBLE;
 }
 
 static void zmk_rgb_underglow_effect_responsive() {
-    return; // dummy function
+    // refresehes the static pixels
+    for (int i = 0; i < 6; i++) { // only the backlight
+        pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
+    }
 }
 
 static void zmk_rgb_underglow_tick(struct k_work *work) {
@@ -476,6 +479,16 @@ int zmk_rgb_underglow_calc_effect(int direction) {
     return (state.current_effect + UNDERGLOW_EFFECT_NUMBER + direction) % UNDERGLOW_EFFECT_NUMBER;
 }
 
+int zmk_rgb_underglow_initialize_effect() {
+    if (state.effect != UNDERGLOW_EFFECT_RESPONSIVE){
+        return 0;
+    }
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
+    }
+    return 0;
+}
+
 int zmk_rgb_underglow_select_effect(int effect) {
     if (!led_strip)
         return -ENODEV;
@@ -486,6 +499,7 @@ int zmk_rgb_underglow_select_effect(int effect) {
 
     state.current_effect = effect;
     state.animation_step = 0;
+    zmk_rgb_underglow_initialize_effect();
 
     return zmk_rgb_underglow_save_state();
 }
