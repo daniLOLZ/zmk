@@ -46,11 +46,14 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define NUM_KEYS 42
 
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
-    static const int led_map[NUM_KEYS] = {24, 23, 22, 21, 20, 19, -1, -1, -1, -1, -1, -1, 25, 18, 17, 16, 15, 14, -1, -1, -1, -1, -1, -1, 26, 13, 12, 11, 10, 9, -1, -1, -1, -1, -1, -1, 8, 7, 6, -1, -1, -1};
+    static const int pos_to_led_map[NUM_KEYS] = {24, 23, 22, 21, 20, 19, -1, -1, -1, -1, -1, -1, 25, 18, 17, 16, 15, 14, -1, -1, -1, -1, -1, -1, 26, 13, 12, 11, 10, 9, -1, -1, -1, -1, -1, -1, 8, 7, 6, -1, -1, -1};
+    static const int led_to_pos_map[STRIP_NUM_PIXELS] = {-1, -1, -1, -1, -1, -1, 38, 37, 36, 29, 28, 27, 26, 25, 17, 16, 15, 14, 13, 5, 4, 3, 2, 1, 0, 12, 24};
 #else
-    static const int led_map[NUM_KEYS] = {-1, -1, -1, -1, -1, -1, 19, 20, 21, 22, 23, 24, -1, -1, -1, -1, -1, -1, 14, 15, 16, 17, 18, 25, -1, -1, -1, -1, -1, -1, 9, 10, 11, 12, 13, 26, -1, -1, -1, 6, 7, 8};
+    static const int pos_to_led_map[NUM_KEYS] = {-1, -1, -1, -1, -1, -1, 19, 20, 21, 22, 23, 24, -1, -1, -1, -1, -1, -1, 14, 15, 16, 17, 18, 25, -1, -1, -1, -1, -1, -1, 9, 10, 11, 12, 13, 26, -1, -1, -1, 6, 7, 8};
+    static const int led_to_pos_map[STRIP_NUM_PIXELS] = {-1, -1, -1, -1, -1, -1, 39, 40, 41, 30, 31, 32, 33, 34, 18, 19, 20, 21, 22, 6, 7, 8, 9, 10, 11, 23, 35};
 #endif
-
+static const uint32_t heatmap_values[NUM_KEYS] = {0};
+static const uint32_t heatmap_value_sum = 1;
 
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
              "ERROR: RGB underglow maximum brightness is less than minimum brightness");
@@ -62,6 +65,7 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_SWIRL,
     UNDERGLOW_EFFECT_WAVE,
     UNDERGLOW_EFFECT_RESPONSIVE,
+    UNDERGLOW_EFFECT_HEATMAP,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
@@ -245,6 +249,9 @@ static void zmk_rgb_underglow_effect_wave() {
     }
 }
 
+
+// dynamic effect code
+
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh);
 
 ZMK_LISTENER(rgb_underglow_dynamic, rgb_underglow_position_state_changed_listener);
@@ -252,7 +259,7 @@ ZMK_SUBSCRIPTION(rgb_underglow_dynamic, zmk_position_state_changed);
 
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) {
 
-    if(state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE){
+    if(state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE && state.current_effect != UNDERGLOW_EFFECT_HEATMAP){
         return ZMK_EV_EVENT_BUBBLE;
     }
     struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
@@ -260,27 +267,64 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    struct zmk_led_hsb other_color = state.color; 
-    other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX; // shifted by half the hue space
-    // other_color.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN;
-    int pixel_to_light = 0;
-
-    if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
-        pixel_to_light = 0; // DEBUG in case it fails
-    } else {
-        pixel_to_light = led_map[ev->position];
-    }
-
-    if(pixel_to_light == -1){ // not on the half that should light up
+    // UNDERGLOW_EFFECT_HEATMAP
+    if (state.current_effect == UNDERGLOW_EFFECT_HEATMAP) {
+        if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
+            // don't increment anything
+        } else {
+            heatmap_values[ev->position] += 1;
+            heatmap_value_sum += 1;
+        }
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    if(ev->state){ //on 
-        pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(other_color));
-    } else { // off
-        pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
+    // UNDERGLOW_EFFECT_RESPONSIVE
+    if (state.current_effect == UNDERGLOW_EFFECT_RESPONSIVE) {
+
+        struct zmk_led_hsb other_color = state.color; 
+        other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX; // shifted by half the hue space
+        // other_color.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN;
+        int pixel_to_light = 0;
+
+        if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
+            pixel_to_light = 0; // DEBUG in case it fails
+        } else {
+            pixel_to_light = pos_to_led_map[ev->position];
+        }
+
+        if(pixel_to_light == -1){ // not on the half that should light up
+            return ZMK_EV_EVENT_BUBBLE;
+        }
+
+        if(ev->state){ //on 
+            pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(other_color));
+        } else { // off
+            pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
+        }
+        return ZMK_EV_EVENT_BUBBLE;
     }
     return ZMK_EV_EVENT_BUBBLE;
+}
+
+static void zmk_rgb_underglow_effect_heatmap() {
+    // refresehes the static pixels with calculated values
+    for (int i = 0; i < 6; i++) { // backlight is refreshed always
+        pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
+    }
+    float percentage = 0;
+    int hue_range = HUE_MAX/2;
+
+    for (int i = 6; i < STRIP_NUM_PIXELS; i++){
+        struct zmk_led_hsb hsb = state.color;
+        // multiply by 5 to give some importance to all values as they will be spread out over many keys
+        // instead of a linear thing it could be like a softmax of some sort
+        percentage = 5.0 * heatmap_values[led_to_pos_map[i]] / (float)heatmap_value_sum; // from 0 to 5
+        // clamp
+        percentage = CLAMP(percentage, 0.0, 1.0);
+
+        hsb.h = (hsb.h + floor(percentage * hue_range)) % HUE_MAX; 
+        pixel[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
+    }
 }
 
 static void zmk_rgb_underglow_effect_responsive() {
@@ -309,6 +353,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         break;
     case UNDERGLOW_EFFECT_RESPONSIVE:
         zmk_rgb_underglow_effect_responsive();
+        break;
+    case UNDERGLOW_EFFECT_HEATMAP:
+        zmk_rgb_underglow_effect_heatmap();
         break;
     }
 
@@ -480,13 +527,22 @@ int zmk_rgb_underglow_calc_effect(int direction) {
 }
 
 int zmk_rgb_underglow_initialize_effect() {
-    if (state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE){
-        return 0;
+    switch (state.current_effect) {
+        case UNDERGLOW_EFFECT_RESPONSIVE:
+            for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+                pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
+            }
+            break;
+        case UNDERGLOW_EFFECT_HEATMAP:
+            heatmap_value_sum = 1; // to avoid zero division
+            for (int i = 0; i < NUM_KEYS; i++) {
+                heatmap_values[i] = 0;
+            }
+            break;
+        default:
+            break;
     }
-    
-    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
-        pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
-    }
+
     return 0;
 }
 
