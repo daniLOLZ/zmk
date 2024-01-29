@@ -273,9 +273,10 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
 
     // UNDERGLOW_EFFECT_HEATMAP
     if (state.current_effect == UNDERGLOW_EFFECT_HEATMAP) {
+
         if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
             // don't increment anything
-        } else {
+        } else if (ev->state) {
             heatmap_values[ev->position] += 1;
             heatmap_value_sum += 1;
         }
