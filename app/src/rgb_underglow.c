@@ -323,7 +323,7 @@ static void zmk_rgb_underglow_effect_heatmap() {
         percentage = CLAMP(percentage, 0.0, 1.0);
 
         hsb.h = (hsb.h + floor(percentage * hue_range)) % HUE_MAX; 
-        pixel[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
+        pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
     }
 }
 
