@@ -64,7 +64,7 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
     UNDERGLOW_EFFECT_WAVE,
-    UNDERGLOW_EFFECT_RESPONSIVE,
+    // UNDERGLOW_EFFECT_RESPONSIVE,
     UNDERGLOW_EFFECT_HEATMAP,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
@@ -259,7 +259,11 @@ ZMK_SUBSCRIPTION(rgb_underglow_dynamic, zmk_position_state_changed);
 
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) {
 
-    if(state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE && state.current_effect != UNDERGLOW_EFFECT_HEATMAP){
+    if(
+        // state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE 
+        // && 
+        state.current_effect != UNDERGLOW_EFFECT_HEATMAP
+        ){
         return ZMK_EV_EVENT_BUBBLE;
     }
     struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
@@ -279,30 +283,30 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
     }
 
     // UNDERGLOW_EFFECT_RESPONSIVE
-    if (state.current_effect == UNDERGLOW_EFFECT_RESPONSIVE) {
+    // if (state.current_effect == UNDERGLOW_EFFECT_RESPONSIVE) {
 
-        struct zmk_led_hsb other_color = state.color; 
-        other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX; // shifted by half the hue space
-        // other_color.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN;
-        int pixel_to_light = 0;
+    //     struct zmk_led_hsb other_color = state.color; 
+    //     other_color.h = (other_color.h + HUE_MAX/2) % HUE_MAX; // shifted by half the hue space
+    //     // other_color.b = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN;
+    //     int pixel_to_light = 0;
 
-        if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
-            pixel_to_light = 0; // DEBUG in case it fails
-        } else {
-            pixel_to_light = pos_to_led_map[ev->position];
-        }
+    //     if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
+    //         pixel_to_light = 0; // DEBUG in case it fails
+    //     } else {
+    //         pixel_to_light = pos_to_led_map[ev->position];
+    //     }
 
-        if(pixel_to_light == -1){ // not on the half that should light up
-            return ZMK_EV_EVENT_BUBBLE;
-        }
+    //     if(pixel_to_light == -1){ // not on the half that should light up
+    //         return ZMK_EV_EVENT_BUBBLE;
+    //     }
 
-        if(ev->state){ //on 
-            pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(other_color));
-        } else { // off
-            pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
-        }
-        return ZMK_EV_EVENT_BUBBLE;
-    }
+    //     if(ev->state){ //on 
+    //         pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(other_color));
+    //     } else { // off
+    //         pixels[pixel_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
+    //     }
+    //     return ZMK_EV_EVENT_BUBBLE;
+    // }
     return ZMK_EV_EVENT_BUBBLE;
 }
 
@@ -351,9 +355,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
     case UNDERGLOW_EFFECT_WAVE:
         zmk_rgb_underglow_effect_wave();
         break;
-    case UNDERGLOW_EFFECT_RESPONSIVE:
-        zmk_rgb_underglow_effect_responsive();
-        break;
+    // case UNDERGLOW_EFFECT_RESPONSIVE:
+    //     zmk_rgb_underglow_effect_responsive();
+    //     break;
     case UNDERGLOW_EFFECT_HEATMAP:
         zmk_rgb_underglow_effect_heatmap();
         break;
