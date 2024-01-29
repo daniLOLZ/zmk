@@ -316,9 +316,9 @@ static void zmk_rgb_underglow_effect_heatmap() {
 
     for (int i = 6; i < STRIP_NUM_PIXELS; i++){
         struct zmk_led_hsb hsb = state.color;
-        // multiply by 5 to give some importance to all values as they will be spread out over many keys
+        // multiply by 8 to give some importance to all values as they will be spread out over many keys
         // instead of a linear thing it could be like a softmax of some sort
-        percentage = 5.0 * heatmap_values[led_to_pos_map[i]] / (float)heatmap_value_sum; // from 0 to 5
+        percentage = 8.0 * heatmap_values[led_to_pos_map[i]] / (float)heatmap_value_sum; // from 0 to 8
         // clamp
         percentage = CLAMP(percentage, 0.0, 1.0);
 
