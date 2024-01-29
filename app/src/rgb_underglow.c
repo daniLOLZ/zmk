@@ -52,8 +52,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
     static const int pos_to_led_map[NUM_KEYS] = {-1, -1, -1, -1, -1, -1, 19, 20, 21, 22, 23, 24, -1, -1, -1, -1, -1, -1, 14, 15, 16, 17, 18, 25, -1, -1, -1, -1, -1, -1, 9, 10, 11, 12, 13, 26, -1, -1, -1, 6, 7, 8};
     static const int led_to_pos_map[STRIP_NUM_PIXELS] = {-1, -1, -1, -1, -1, -1, 39, 40, 41, 30, 31, 32, 33, 34, 18, 19, 20, 21, 22, 6, 7, 8, 9, 10, 11, 23, 35};
 #endif
-static const uint32_t heatmap_values[NUM_KEYS] = {0};
-static const uint32_t heatmap_value_sum = 1;
+static uint32_t heatmap_values[NUM_KEYS] = {0};
+static uint32_t heatmap_value_sum = 1;
 
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
              "ERROR: RGB underglow maximum brightness is less than minimum brightness");
