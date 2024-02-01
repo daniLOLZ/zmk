@@ -533,11 +533,11 @@ int zmk_rgb_underglow_calc_effect(int direction) {
 
 int zmk_rgb_underglow_initialize_effect() {
     switch (state.current_effect) {
-        case UNDERGLOW_EFFECT_RESPONSIVE:
-            for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
-                pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
-            }
-            break;
+        // case UNDERGLOW_EFFECT_RESPONSIVE:
+        //     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        //         pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
+        //     }
+        //     break;
         case UNDERGLOW_EFFECT_HEATMAP:
             heatmap_value_sum = 1; // to avoid zero division
             for (int i = 0; i < NUM_KEYS; i++) {
