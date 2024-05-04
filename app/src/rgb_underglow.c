@@ -220,7 +220,7 @@ static void zmk_rgb_underglow_effect_swirl_bi() {
     } else if (state.animation_step <= 0) {
         state.animation_speed = -state.animation_speed;
     }
-    state.animation_step += state.animation_speed / s2;
+    state.animation_step += state.animation_speed / 2;
 }
 
 static void zmk_rgb_underglow_effect_wave() {
