@@ -206,15 +206,21 @@ static void zmk_rgb_underglow_effect_swirl_bi() {
 
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
-        hsb.h = (100 / STRIP_NUM_PIXELS * i + 240 + state.animation_step);
-        if (hsb.h > 340) {
-            hsb.h -= 100;
+        hsb.h = (120 / STRIP_NUM_PIXELS * i + 240 + state.animation_step);
+        if (hsb.h < 240) {
+            hsb.h += 240 * (state.animation_speed/abs(state.animation_speed));
         }
+        hsb.h = hsb.h % HUE_MAX;
         pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
     }
 
-    state.animation_step += state.animation_speed * 2;
-    state.animation_step = state.animation_step % 100;
+    // Triangle wave
+    if (state.animation_step > 120) {
+        state.animation_speed = -state.animation_speed;
+    } else if (state.animation_step <= 0) {
+        state.animation_speed = -state.animation_speed;
+    }
+    state.animation_step += state.animation_speed / s2;
 }
 
 static void zmk_rgb_underglow_effect_wave() {
