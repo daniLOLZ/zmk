@@ -372,9 +372,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
     case UNDERGLOW_EFFECT_SWIRL_BI:
         zmk_rgb_underglow_effect_swirl_bi();
         break;
-    case UNDERGLOW_EFFECT_WAVE:
-        zmk_rgb_underglow_effect_wave();
-        break;
+    // case UNDERGLOW_EFFECT_WAVE:
+    //     zmk_rgb_underglow_effect_wave();
+    //     break;
     // case UNDERGLOW_EFFECT_RESPONSIVE:
     //     zmk_rgb_underglow_effect_responsive();
     //     break;
