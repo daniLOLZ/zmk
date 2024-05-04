@@ -63,7 +63,8 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_BREATHE,
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
-    UNDERGLOW_EFFECT_WAVE,
+    UNDERGLOW_EFFECT_SWIRL_BI,
+    // UNDERGLOW_EFFECT_WAVE,
     // UNDERGLOW_EFFECT_RESPONSIVE,
     UNDERGLOW_EFFECT_HEATMAP,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
@@ -198,6 +199,22 @@ static void zmk_rgb_underglow_effect_swirl() {
     }
 
     state.animation_step += state.animation_speed * 2;
+    state.animation_step = state.animation_step % HUE_MAX;
+}
+
+static void zmk_rgb_underglow_effect_swirl_bi() {
+    hue_min_bi = 240;
+    hue_max_bi = 340;
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        struct zmk_led_hsb hsb = state.color;
+        hsb.h = (100 / STRIP_NUM_PIXELS * i + 240 + state.animation_step);
+        if (hsb.h > 340) {
+            hsb.h -= 100
+        }
+        pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
+    }
+
+    state.animation_step += state.animation_speed * 4;
     state.animation_step = state.animation_step % HUE_MAX;
 }
 
@@ -352,6 +369,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         break;
     case UNDERGLOW_EFFECT_SWIRL:
         zmk_rgb_underglow_effect_swirl();
+        break;
+    case UNDERGLOW_EFFECT_SWIRL_BI:
+        zmk_rgb_underglow_effect_swirl_bi();
         break;
     case UNDERGLOW_EFFECT_WAVE:
         zmk_rgb_underglow_effect_wave();
