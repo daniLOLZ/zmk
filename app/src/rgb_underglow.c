@@ -213,8 +213,8 @@ static void zmk_rgb_underglow_effect_swirl_bi() {
         pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
     }
 
-    state.animation_step += state.animation_speed * 4;
-    state.animation_step = state.animation_step % HUE_MAX;
+    state.animation_step += state.animation_speed * 2;
+    state.animation_step = state.animation_step % 100;
 }
 
 static void zmk_rgb_underglow_effect_wave() {
