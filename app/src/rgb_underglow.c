@@ -213,7 +213,7 @@ static void zmk_rgb_underglow_effect_swirl_bi() {
         struct zmk_led_hsb hsb = state.color;
         hsb.h = (((hue_high-hue_low) / STRIP_NUM_PIXELS) * i + state.animation_step);
         if (hsb.h > hue_high) {
-            hsb.h = hue_high - (hsb.h - hue_high) // remove the overshoot
+            hsb.h = hue_high - (hsb.h - hue_high); // remove the overshoot
         }
         hsb.h = hsb.h % HUE_MAX; // should never do anything
         pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
