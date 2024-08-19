@@ -54,6 +54,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #endif
 static uint32_t heatmap_values[NUM_KEYS] = {0};
 static uint32_t heatmap_value_sum = 1;
+static short speed_mult = 1;
 
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
              "ERROR: RGB underglow maximum brightness is less than minimum brightness");
@@ -204,23 +205,28 @@ static void zmk_rgb_underglow_effect_swirl() {
 
 static void zmk_rgb_underglow_effect_swirl_bi() {
 
+    const uint32_t hue_high = 300;
+    const uint32_t hue_low = 240;
+
+    // Hue range: 240 - 300
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
-        hsb.h = (120 / STRIP_NUM_PIXELS * i + 240 + state.animation_step);
-        if (hsb.h < 240) {
-            hsb.h += 240 * (state.animation_speed/abs(state.animation_speed));
+        hsb.h = (((hue_high-hue_low) / STRIP_NUM_PIXELS) * i + state.animation_step);
+        if (hsb.h > hue_high) {
+            hsb.h = hue_high - (hsb.h - hue_high) // remove the overshoot
         }
-        hsb.h = hsb.h % HUE_MAX;
+        hsb.h = hsb.h % HUE_MAX; // should never do anything
         pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
     }
 
     // Triangle wave
-    if (state.animation_step > 120) {
-        state.animation_speed = -state.animation_speed;
-    } else if (state.animation_step <= 0) {
-        state.animation_speed = -state.animation_speed;
+    if (state.animation_step >= hue_high) {
+        speed_mult *= -1;
+    } else if (state.animation_step < hue_low) {
+        speed_mult *= -1;
     }
-    state.animation_step += state.animation_speed / 2;
+    state.animation_step += state.animation_speed*speed_mult;
+    // state.animation_step = state.animation_step % HUE_MAX;
 }
 
 static void zmk_rgb_underglow_effect_wave() {
@@ -568,6 +574,10 @@ int zmk_rgb_underglow_initialize_effect() {
             for (int i = 0; i < NUM_KEYS; i++) {
                 heatmap_values[i] = 0;
             }
+            break;
+        case UNDERGLOW_EFFECT_SWIRL_BI:
+            state.animation_step = 240; // start at 240
+            speed_mult = 1;
             break;
         default:
             break;
