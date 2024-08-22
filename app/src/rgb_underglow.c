@@ -383,7 +383,7 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
         }
         else if (!ev->state) // key up
         {
-            for(i = 0; i < MAX_RIPPLE_TREES; i++){
+            for(int i = 0; i < MAX_RIPPLE_TREES; i++){
                 if(queued_trees[i]){
                     occupied_trees[i] = 0;
                     queued_trees[i] = false;
