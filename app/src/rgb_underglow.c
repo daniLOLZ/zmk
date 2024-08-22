@@ -451,7 +451,7 @@ static short prepare_ripple(int position){
     ripple_trees[free_tree][0][0] = position; // first frame
     bool used_keys[NUM_KEYS];
     short adjacencies_found[NUM_KEYS];
-    ushort frame = 1;
+    short frame = 1;
     short cur_key = -1;
     short cur_free_pos = -1;
     bool done = false;
