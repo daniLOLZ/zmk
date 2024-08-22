@@ -543,14 +543,14 @@ static void zmk_rgb_underglow_effect_ripple() {
         led_to_light = pos_to_led_map[queued_trees[i]];
         if (led_to_light == -1) continue;
         pixels[led_to_light] = hsb_to_rgb(hsb_scale_min_max(hsb));
-    
+    }
     // light correct pixels
     for (int i=0; i < MAX_RIPPLE_TREES; i++){ // for each slot
         if (occupied_trees[i] == -1) continue;
         short frame = occupied_trees[i];
         // what colour to use
         hsb = state.color;
-        hsb.b = (100 - (frame * 20)); // 10% less bright each frame
+        hsb.b = ((float)(100 - (frame * 20)))/100*hsb.b; // 10% less bright than current_brightness each frame
 
         for (int idx=0; idx < NUM_KEYS; idx++){  // this is a list of keys that should light up
             if (ripple_trees[i][frame][idx] == -1) break; // frame is done
@@ -571,12 +571,12 @@ static void zmk_rgb_underglow_effect_ripple() {
     }
 }
 
-static void zmk_rgb_underglow_effect_responsive() {
-    // refresehes the static pixels
-    for (int i = 0; i < 6; i++) { // only the backlight
-        pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
-    }
-}
+// static void zmk_rgb_underglow_effect_responsive() {
+//     // refresehes the static pixels
+//     for (int i = 0; i < 6; i++) { // only the backlight
+//         pixels[i] = hsb_to_rgb(hsb_scale_min_max(state.color));
+//     }
+// }
 
 static void zmk_rgb_underglow_tick(struct k_work *work) {
     switch (state.current_effect) {
