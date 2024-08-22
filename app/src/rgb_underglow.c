@@ -378,7 +378,7 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
         else if (ev->state) // key down
         {
             // prepare ripple
-            returned_tree = prepare_ripple(ev->position)
+            returned_tree = prepare_ripple(ev->position);
             if (returned_tree != -1) queued_trees[returned_tree] = true; // if free slot ok, else return doing nothing
         }
         else if (!ev->state) // key up
