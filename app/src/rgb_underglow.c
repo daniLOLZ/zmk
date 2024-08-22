@@ -334,6 +334,8 @@ static void zmk_rgb_underglow_effect_wave() {
 
 
 // dynamic effect code
+static short prepare_ripple(int position);
+static void get_adjacent(int key, short* adjacencies_found);
 
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh);
 
