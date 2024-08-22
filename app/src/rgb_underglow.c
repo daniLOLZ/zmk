@@ -550,7 +550,8 @@ static void zmk_rgb_underglow_effect_ripple() {
         short frame = occupied_trees[i];
         // what colour to use
         hsb = state.color;
-        hsb.b = ((float)(100 - (frame * 20)))/100*hsb.b; // 10% less bright than current_brightness each frame
+        hsb.h = hsb.h+(frame*30); // rotate around the hue wheel 
+        // brightness isn't really distinguishable
 
         for (int idx=0; idx < NUM_KEYS; idx++){  // this is a list of keys that should light up
             if (ripple_trees[i][frame][idx] == -1) break; // frame is done
