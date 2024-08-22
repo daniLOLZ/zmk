@@ -44,6 +44,10 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define BRT_MAX 100
 
 #define NUM_KEYS 42
+#define KEYS_PER_HALF 21
+#define MAX_RIPPLE_TREES 5
+#define MAX_RIPPLE_FRAMES 10
+#define MAX_RIPPLE_FRAME_DURATION 20
 
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     static const int pos_to_led_map[NUM_KEYS] = {24, 23, 22, 21, 20, 19, -1, -1, -1, -1, -1, -1, 25, 18, 17, 16, 15, 14, -1, -1, -1, -1, -1, -1, 26, 13, 12, 11, 10, 9, -1, -1, -1, -1, -1, -1, 8, 7, 6, -1, -1, -1};
@@ -52,9 +56,59 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
     static const int pos_to_led_map[NUM_KEYS] = {-1, -1, -1, -1, -1, -1, 19, 20, 21, 22, 23, 24, -1, -1, -1, -1, -1, -1, 14, 15, 16, 17, 18, 25, -1, -1, -1, -1, -1, -1, 9, 10, 11, 12, 13, 26, -1, -1, -1, 6, 7, 8};
     static const int led_to_pos_map[STRIP_NUM_PIXELS] = {-1, -1, -1, -1, -1, -1, 39, 40, 41, 30, 31, 32, 33, 34, 18, 19, 20, 21, 22, 6, 7, 8, 9, 10, 11, 23, 35};
 #endif
+    static const int adjacencies[NUM_KEYS][NUM_KEYS] = {
+        {1, 12, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {0, 2, 13, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {1, 3, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {2, 4, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {3, 5, 16, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {4, 17, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {7, 18, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {6,8,19, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {7,9,20, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {8,10,21, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {9,11,22,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {10,23, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {0,13,24, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // inizio seconda riga
+        {1,12,14,25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {2,13,15,26, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {3,14,16,27, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {4,15,17,28, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {5,16,29, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {6,19,30,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {7,18,20,31,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {8,19,21,32,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {9,20,22,33,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {10,21,23,34,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {11,22,35, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {12,25,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // inizio terza riga
+        {13,24,26,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {14,25,27, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {15,26,28,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {16,27,29, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {17,28, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {18,31,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {19,30,32, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {20,31,33, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {21,32,34, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {22,33,35,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {23,34,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {27,28,37,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // thumbs
+        {28,29,36,38,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {37,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {40, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {30,31,39,41, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        {31,32,40,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
+    };
 static uint32_t heatmap_values[NUM_KEYS] = {0};
 static uint32_t heatmap_value_sum = 1;
 static short speed_mult = 1;
+static short ripple_trees[MAX_RIPPLE_TREES][MAX_RIPPLE_FRAMES][NUM_KEYS];
+static short occupied_trees[MAX_RIPPLE_TREES]; // frame counter for each tree
+static bool queued_trees[MAX_RIPPLE_TREES]; 
+static short ripple_frame_duration[MAX_RIPPLE_TREES];
+
+
 
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
              "ERROR: RGB underglow maximum brightness is less than minimum brightness");
@@ -68,6 +122,7 @@ enum rgb_underglow_effect {
     // UNDERGLOW_EFFECT_WAVE,
     // UNDERGLOW_EFFECT_RESPONSIVE,
     UNDERGLOW_EFFECT_HEATMAP,
+    UNDERGLOW_EFFECT_RIPPLE,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
@@ -205,7 +260,7 @@ static void zmk_rgb_underglow_effect_swirl() {
 
 static void zmk_rgb_underglow_effect_swirl_bi() {
 
-    const uint32_t hue_high = 300;
+    const uint32_t hue_high = 320;
     const uint32_t hue_low = 240;
 
     // Hue range: 240 - 300
@@ -287,10 +342,13 @@ ZMK_SUBSCRIPTION(rgb_underglow_dynamic, zmk_position_state_changed);
 
 static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) {
 
+    short returned_tree = -1;
     if(
         // state.current_effect != UNDERGLOW_EFFECT_RESPONSIVE 
         // && 
         state.current_effect != UNDERGLOW_EFFECT_HEATMAP
+        &&
+        state.current_effect != UNDERGLOW_EFFECT_RIPPLE
         ){
         return ZMK_EV_EVENT_BUBBLE;
     }
@@ -307,6 +365,31 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
         } else if (ev->state) {
             heatmap_values[ev->position] += 1;
             heatmap_value_sum += 1;
+        }
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    // UNDERGLOW_EFFECT_RIPPLE
+    // Create a data structure that's a list of frames originating from the pressed key
+    else if (state.current_effect == UNDERGLOW_EFFECT_RIPPLE) {
+        if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
+            return ZMK_EV_EVENT_BUBBLE;
+        }
+        else if (ev->state) // key down
+        {
+            // prepare ripple
+            returned_tree = prepare_ripple(ev->position)
+            if (returned_tree != -1) queued_trees[returned_tree] = true; // if free slot ok, else return doing nothing
+        }
+        else if (!ev->state) // key up
+        {
+            for(i = 0; i < MAX_RIPPLE_TREES; i++){
+                if(queued_trees[i]){
+                    occupied_trees[i] = 0;
+                    queued_trees[i] = false;
+                }
+            }
+            // activate queued ripples
         }
         return ZMK_EV_EVENT_BUBBLE;
     }
@@ -339,6 +422,83 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
     return ZMK_EV_EVENT_BUBBLE;
 }
 
+static short prepare_ripple(int position){
+    /*
+    * Starting from position, creates a list of frames of adjacent keys
+    * Returns the index of the used tree slot
+    */
+    // find a free tree
+    int free_tree = -1;
+    for (int i = 0; i < MAX_RIPPLE_TREES; i++){
+        if(!occupied_trees[i]){
+            free_tree = i;
+            break;
+        }
+    }
+    if(free_tree == -1){
+        return -1; // no free tree
+    }
+
+    // reset the tree
+    for(int i = 0; i < MAX_RIPPLE_FRAMES; i++){
+        for(int j = 0; j < NUM_KEYS; j++){
+            ripple_trees[free_tree][i][j] = -1;
+        }
+    }
+
+    ripple_trees[free_tree][0][0] = position; // first frame
+    bool used_keys[NUM_KEYS];
+    short adjacencies_found[NUM_KEYS];
+    ushort frame = 1;
+    short cur_key = -1;
+    short cur_free_pos = -1;
+    bool done = false;
+    for(int i = 0; i < NUM_KEYS; i++){
+        used_keys[i] = false;
+    }
+    used_keys[position] = true;
+    
+    while(!done){
+        // begin preparing
+        cur_free_pos = 0;
+        done = true;
+
+        // begin frame
+        for(int j = 0; j < NUM_KEYS; j++){
+            // for each key in the previous frame, get its neighbours
+            cur_key = ripple_trees[free_tree][frame-1][j];
+
+            if (cur_key == -1){
+                frame += 1;
+                break; // done with the frame
+            } 
+            done = false;
+            get_adjacent(cur_key, adjacencies_found);
+
+            for(int k = 0; k < NUM_KEYS; k++){
+                if adjacencies_found[k] == -1 {
+                    break;
+                }
+                if (!used_keys[adjacencies_found[k]]) {
+                    ripple_trees[free_tree][frame][cur_free_pos] = adjacencies_found[k];
+                    cur_free_pos += 1;
+                    used_keys[adjacencies_found[k]] = true;
+                }
+            }
+        }
+    }
+    return free_tree;
+}
+
+static void get_adjacent(int key, short* adjacencies_found){
+    for (int i = 0; i < NUM_KEYS; i++){
+        adjacencies_found[i] = -1;
+    }
+    for (int i = 0; i < NUM_KEYS; i++){
+        adjacencies_found[i] = adjacencies[key][i];
+    }
+}
+
 static void zmk_rgb_underglow_effect_heatmap() {
     // refresehes the static pixels with calculated values
     for (int i = 0; i < 6; i++) { // backlight is refreshed always
@@ -357,6 +517,33 @@ static void zmk_rgb_underglow_effect_heatmap() {
 
         hsb.h = (hsb.h + (int)(percentage * hue_range)) % HUE_MAX; 
         pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
+    }
+}
+
+static void zmk_rgb_underglow_effect_ripple() {
+    // reset lit pixels
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        pixels[i] = (struct led_rgb){r : 0, g : 0, b : 0}; // hopefully works else dumb copilot
+    }
+    // light correct pixels
+    for (int i=0; i < MAX_RIPPLE_TREES; i++){ // for each slot
+        if (occupied_trees[i] == -1) continue;
+        short frame = occupied_trees[i];
+        for (int idx=0; idx < NUM_KEYS; idx++){  // this is a list of keys that should light up
+            if (ripple_trees[i][frame][idx] == -1) break; // frame is done
+            led_to_light = pos_to_led_map[ripple_trees[i][frame][idx]];
+            if (led_to_light == -1) continue; // safety
+            pixels[led_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
+        }
+        // might be too fast to see, add this secondary buffer
+        ripple_frame_duration[i] += 1;
+        if (ripple_frame_duration[i] >= MAX_RIPPLE_FRAME_DURATION){
+            ripple_frame_duration[i] = 0;
+            occupied_trees[i] += 1; // go to next frame            
+        }
+        if (occupied_trees[i] >= MAX_RIPPLE_FRAMES){
+            occupied_trees[i] = -1; // free the slot
+        }
     }
 }
 
@@ -392,6 +579,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
     //     break;
     case UNDERGLOW_EFFECT_HEATMAP:
         zmk_rgb_underglow_effect_heatmap();
+        break;
+    case UNDERGLOW_EFFECT_RIPPLE:
+        zmk_rgb_underglow_effect_ripple();
         break;
     }
 
@@ -578,6 +768,13 @@ int zmk_rgb_underglow_initialize_effect() {
         case UNDERGLOW_EFFECT_SWIRL_BI:
             state.animation_step = 240; // start at 240
             speed_mult = 1;
+            break;
+        case UNDERGLOW_EFFECT_RIPPLE:
+            for (int i = 0; i < MAX_RIPPLE_TREES; i++){
+                occupied_trees[i] = -1;
+                queued_trees[i] = false;
+                ripple_frame_duration[i] = 0;
+            }
             break;
         default:
             break;
