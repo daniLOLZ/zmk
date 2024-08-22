@@ -478,7 +478,7 @@ static short prepare_ripple(int position){
             get_adjacent(cur_key, adjacencies_found);
 
             for(int k = 0; k < NUM_KEYS; k++){
-                if adjacencies_found[k] == -1 {
+                if (adjacencies_found[k] == -1) {
                     break;
                 }
                 if (!used_keys[adjacencies_found[k]]) {
