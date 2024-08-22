@@ -523,9 +523,11 @@ static void zmk_rgb_underglow_effect_heatmap() {
 }
 
 static void zmk_rgb_underglow_effect_ripple() {
-    // reset lit pixels
+    // reset lit pixels to other colour
+    struct zmk_led_hsb hsb = state.color;
+    hsb.h = (hsb.h + HUE_MAX/2) % HUE_MAX;
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
-        pixels[i] = (struct led_rgb){r : 0, g : 0, b : 0}; // hopefully works else dumb copilot
+        pixels[i] = hsb_to_rgb(hsb_scale_min_max(hsb));
     }
     // light correct pixels
     for (int i=0; i < MAX_RIPPLE_TREES; i++){ // for each slot
@@ -534,7 +536,7 @@ static void zmk_rgb_underglow_effect_ripple() {
         for (int idx=0; idx < NUM_KEYS; idx++){  // this is a list of keys that should light up
             if (ripple_trees[i][frame][idx] == -1) break; // frame is done
             int led_to_light = pos_to_led_map[ripple_trees[i][frame][idx]];
-            if (led_to_light == -1) continue; // safety
+            if (led_to_light == -1) led_to_light = 6; // debug
             pixels[led_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
         }
         // might be too fast to see, add this secondary buffer
