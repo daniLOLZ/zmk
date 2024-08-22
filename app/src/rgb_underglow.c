@@ -433,7 +433,7 @@ static short prepare_ripple(int position){
     // find a free tree
     int free_tree = -1;
     for (int i = 0; i < MAX_RIPPLE_TREES; i++){
-        if(occupied_trees[i] == -1){
+        if(occupied_trees[i] == -1 && queued_trees[i] == -1){ // these should always happen together
             free_tree = i;
             break;
         }
