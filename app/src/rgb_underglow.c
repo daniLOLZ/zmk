@@ -533,7 +533,7 @@ static void zmk_rgb_underglow_effect_ripple() {
         short frame = occupied_trees[i];
         for (int idx=0; idx < NUM_KEYS; idx++){  // this is a list of keys that should light up
             if (ripple_trees[i][frame][idx] == -1) break; // frame is done
-            led_to_light = pos_to_led_map[ripple_trees[i][frame][idx]];
+            int led_to_light = pos_to_led_map[ripple_trees[i][frame][idx]];
             if (led_to_light == -1) continue; // safety
             pixels[led_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
         }
