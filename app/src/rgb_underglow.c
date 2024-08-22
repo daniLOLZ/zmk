@@ -45,9 +45,9 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #define NUM_KEYS 42
 #define KEYS_PER_HALF 21
-#define MAX_RIPPLE_TREES 10
+#define MAX_RIPPLE_TREES 15
 #define MAX_RIPPLE_FRAMES 10
-#define MAX_RIPPLE_FRAME_DURATION 5
+#define MAX_RIPPLE_FRAME_DURATION 3
 
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     static const int pos_to_led_map[NUM_KEYS] = {24, 23, 22, 21, 20, 19, -1, -1, -1, -1, -1, -1, 25, 18, 17, 16, 15, 14, -1, -1, -1, -1, -1, -1, 26, 13, 12, 11, 10, 9, -1, -1, -1, -1, -1, -1, 8, 7, 6, -1, -1, -1};
@@ -539,7 +539,7 @@ static void zmk_rgb_underglow_effect_ripple() {
         for (int idx=0; idx < NUM_KEYS; idx++){  // this is a list of keys that should light up
             if (ripple_trees[i][frame][idx] == -1) break; // frame is done
             int led_to_light = pos_to_led_map[ripple_trees[i][frame][idx]];
-            if (led_to_light == -1) led_to_light = 6; // debug
+            if (led_to_light == -1) continue; // safety
             pixels[led_to_light] = hsb_to_rgb(hsb_scale_min_max(state.color));
         }
         // might be too fast to see, add this secondary buffer
