@@ -105,7 +105,7 @@ static uint32_t heatmap_value_sum = 1;
 static short speed_mult = 1;
 static short ripple_trees[MAX_RIPPLE_TREES][MAX_RIPPLE_FRAMES][NUM_KEYS];
 static short occupied_trees[MAX_RIPPLE_TREES]; // frame counter for each tree
-static bool queued_trees[MAX_RIPPLE_TREES]; 
+static short queued_trees[MAX_RIPPLE_TREES]; 
 static short ripple_frame_duration[MAX_RIPPLE_TREES];
 
 
@@ -375,20 +375,20 @@ static int rgb_underglow_position_state_changed_listener(const zmk_event_t *eh) 
     // Create a data structure that's a list of frames originating from the pressed key
     else if (state.current_effect == UNDERGLOW_EFFECT_RIPPLE) {
         if (ev->position < 0 || ev->position >= NUM_KEYS){ // my total number of keys 
-            return ZMK_EV_EVENT_BUBBLE;
+            // nothing
         }
         else if (ev->state) // key down
         {
             // prepare ripple
             returned_tree = prepare_ripple(ev->position);
-            if (returned_tree != -1) queued_trees[returned_tree] = true; // if free slot ok, else return doing nothing
+            if (returned_tree != -1) queued_trees[returned_tree] = ev->position; // if free slot ok, else return doing nothing
         }
         else if (!ev->state) // key up
         {
             for(int i = 0; i < MAX_RIPPLE_TREES; i++){
-                if(queued_trees[i]){
+                if(queued_trees[i] == ev->position){
                     occupied_trees[i] = 0;
-                    queued_trees[i] = false;
+                    queued_trees[i] = -1;
                 }
             }
             // activate queued ripples
@@ -432,7 +432,7 @@ static short prepare_ripple(int position){
     // find a free tree
     int free_tree = -1;
     for (int i = 0; i < MAX_RIPPLE_TREES; i++){
-        if(!occupied_trees[i]){
+        if(occupied_trees[i] == -1){
             free_tree = i;
             break;
         }
@@ -776,7 +776,7 @@ int zmk_rgb_underglow_initialize_effect() {
         case UNDERGLOW_EFFECT_RIPPLE:
             for (int i = 0; i < MAX_RIPPLE_TREES; i++){
                 occupied_trees[i] = -1;
-                queued_trees[i] = false;
+                queued_trees[i] = -1;
                 ripple_frame_duration[i] = 0;
             }
             break;
