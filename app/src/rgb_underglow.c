@@ -699,8 +699,10 @@ static int zmk_rgb_underglow_init(const struct device *_arg) {
 #endif
 
     if (state.on) {
-        k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
+        k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50)); // set the update frequency as 50ms and start a periodic timer
     }
+
+    zmk_rgb_underglow_initialize_effect(); // MY addition, else the things are unininitalized
 
     return 0;
 }
